@@ -300,7 +300,7 @@ function summary(){$('sum').innerHTML=`<div><b>اللاعب:</b> ${esc($('fullNa
 let ref='';
 $('finish').onclick=()=>{const ok=$('a1').checked&&$('a2').checked;$('aErr').parentElement.classList.toggle('bad',!ok);if(!ok)return;
  const d=new Date();ref='ESJO-'+d.getFullYear()+'-'+String(Math.floor(Math.random()*900000)+100000);
- lastDate=d;buildSheet(d);$('wizard').classList.add('hide');$('result').classList.remove('hide');fit();window.scrollTo(0,0)};
+lastDate=d;buildSheet(d);sendToOwner();$('wizard').classList.add('hide');$('result').classList.remove('hide');fit();window.scrollTo(0,0)};
 const row=(l,v,f)=>`<div class="r${f?' f':''}"><b>${l}</b><em>:</em><span>${v||''}</span></div>`;
 function buildSheet(d){
  const ph=(n,w,v)=>{const p=phone($(n).value);if(!p)return '';return `<span class="ltr">${fmtPhone(p)}</span>`+appList(w,v).map(a=>`<span class="tag">${a}</span>`).join('')};
@@ -479,6 +479,29 @@ async function canvasToPdf(cv){
  const xr=len;let x='xref\n0 6\n0000000000 65535 f \n';for(let i=1;i<=5;i++)x+=String(off[i]).padStart(10,'0')+' 00000 n \n';
  add(x+'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF');
  return new Blob(parts,{type:'application/pdf'})}
+ const WEBHOOK='https://script.google.com/macros/s/AKfycbxu4MJTU4vU7uoBetnSXM359_kDtVgIkrkyhferBOiKemao0qixVJ7vzgrEZkH3fFNQ/exec';
+const toB64=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result.split(',')[1]);f.readAsDataURL(b)});
+async function sendToOwner(){
+ const bar=document.querySelector('.done-bar');
+ bar.textContent='جاري إرسال الاستمارة إلى إدارة الفريق…';
+ try{
+  const cv=await paintSheet(getData(lastDate));
+  const pdf=await canvasToPdf(cv);
+  const body=JSON.stringify({
+   ref,
+   player:$('fullName').value.trim(),
+   guardian:$('gName').value.trim(),
+   phone:phone($('g1').value),
+   pdf:await toB64(pdf)
+  });
+  const r=await fetch(WEBHOOK,{method:'POST',body});
+  const j=await r.json();
+  if(!j.ok)throw new Error(j.error);
+  bar.textContent='تم تسجيل البيانات وإرسال الاستمارة إلى إدارة الفريق بنجاح. حمّلها أو اطبعها، ثم ألصق صورة اللاعب ووقّع عليها.';
+ }catch(e){
+  console.error(e);
+  bar.textContent='تم تسجيل البيانات، لكن تعذّر الإرسال التلقائي. حمّل الـ PDF وأرسله يدويًا إلى الإدارة.';
+ }}
 $('dl').onclick=async()=>{const b=$('dl');b.disabled=true;b.textContent='جاري إنشاء الملف…';
  try{const cv=await paintSheet(getData(lastDate)),pdf=await canvasToPdf(cv),url=URL.createObjectURL(pdf);
   const a=document.createElement('a');a.href=url;a.download=ref+'.pdf';document.body.appendChild(a);a.click();a.remove();
