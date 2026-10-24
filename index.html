@@ -273,7 +273,7 @@ function req(id,msg){return setErr(id,$(id).value.trim()?'':msg)}
 function validate(n){let ok=true;const chk=r=>{if(!r)ok=false};
  if(n===0){
   chk(setErr('fullName',$('fullName').value.trim().split(/\s+/).length<2?'أدخل اللقب والاسم معًا.':''));
-  let bm='';const bv=$('birth').value;if(!bv)bm='اختر تاريخ الميلاد.';else{const a=age(bv);if(a<4||a>19)bm='العمر ('+a+' سنة) خارج فئة الناشئين.'}chk(setErr('birth',bm));
+  let bm='';const bv=$('birth').value;if(!bv)bm='اختر تاريخ الميلاد.';chk(setErr('birth',bm));
   chk(req('birthPlace','أدخل مكان الميلاد.'));chk(req('nation','أدخل الجنسية.'));chk(req('level','اختر المستوى الدراسي.'));
   chk(req('school','أدخل اسم المدرسة.'));chk(req('address','أدخل عنوان المنزل.'));
   const p=phone($('pPhone').value);chk(setErr('pPhone',p&&!okPhone(p)?'رقم غير صحيح (مثال: 0555 12 34 56).':''));
