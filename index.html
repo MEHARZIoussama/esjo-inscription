@@ -300,7 +300,10 @@ function summary(){$('sum').innerHTML=`<div><b>اللاعب:</b> ${esc($('fullNa
 let ref='';
 $('finish').onclick=()=>{const ok=$('a1').checked&&$('a2').checked;$('aErr').parentElement.classList.toggle('bad',!ok);if(!ok)return;
  const d=new Date();ref='ESJO-'+d.getFullYear()+'-'+String(Math.floor(Math.random()*900000)+100000);
- lastDate=d;buildSheet(d);sendToOwner();$('wizard').classList.add('hide');$('result').classList.remove('hide');fit();window.scrollTo(0,0)};
+ lastDate=d;buildSheet(d);$('wizard').classList.add('hide');$('result').classList.remove('hide');fit();window.scrollTo(0,0);
+ sendToOwner().then(ok=>{const b=document.querySelector('.done-bar');
+  b.textContent+= ok?' ✓ تم إرسال نسخة إلى إدارة الفريق.':' (تعذّر إرسال النسخة تلقائيًا، حمّل الـ PDF وسلّمه للإدارة).'});
+};
 const row=(l,v,f)=>`<div class="r${f?' f':''}"><b>${l}</b><em>:</em><span>${v||''}</span></div>`;
 function buildSheet(d){
  const ph=(n,w,v)=>{const p=phone($(n).value);if(!p)return '';return `<span class="ltr">${fmtPhone(p)}</span>`+appList(w,v).map(a=>`<span class="tag">${a}</span>`).join('')};
@@ -479,29 +482,25 @@ async function canvasToPdf(cv){
  const xr=len;let x='xref\n0 6\n0000000000 65535 f \n';for(let i=1;i<=5;i++)x+=String(off[i]).padStart(10,'0')+' 00000 n \n';
  add(x+'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF');
  return new Blob(parts,{type:'application/pdf'})}
- 
+ /* ===== إرسال الاستمارة تلقائيًا إلى إيميل صاحب المنصة ===== */
+const OWNER_EMAIL='meharzi.oussama31@gmail.com';
 async function sendToOwner(){
- const bar=document.querySelector('.done-bar');
- bar.textContent='جاري إرسال الاستمارة إلى إدارة الفريق…';
- try{
-  const pdf=await canvasToPdf(await paintSheet(getData(lastDate)));
-  const body=JSON.stringify({
-   ref,
-   player:$('fullName').value.trim(),
-   guardian:$('gName').value.trim(),
-   phone:phone($('g1').value),
-   pdf:await toB64(pdf)
-  });
-  // نص عادي (text/plain) لتجنّب مشكلة CORS مع Apps Script
-  const r=await fetch(WEBHOOK,{method:'POST',body,redirect:'follow'});
-  const t=await r.text();
-  let j;try{j=JSON.parse(t)}catch(_){throw new Error('رد غير متوقع من الخادم')}
-  if(!j.ok)throw new Error(j.error||'فشل الإرسال');
-  bar.textContent='تم تسجيل البيانات وإرسال الاستمارة إلى إدارة الفريق بنجاح. حمّلها أو اطبعها، ثم ألصق صورة اللاعب ووقّع عليها.';
- }catch(e){
-  console.error(e);
-  bar.textContent='تم تسجيل البيانات، لكن تعذّر الإرسال التلقائي. حمّل الـ PDF وأرسله يدويًا إلى الإدارة.';
- }
+  try{
+    const cv=await paintSheet(getData(lastDate));
+    const pdf=await canvasToPdf(cv);
+    const fd=new FormData();
+    fd.append('_subject','تسجيل جديد: '+$('fullName').value.trim()+' ('+ref+')');
+    fd.append('_captcha','false');
+    fd.append('_template','table');
+    fd.append('رقم التسجيل',ref);
+    fd.append('اسم اللاعب',$('fullName').value.trim());
+    fd.append('تاريخ الميلاد',fmtDate($('birth').value));
+    fd.append('اسم الولي',$('gName').value.trim());
+    fd.append('هاتف الولي',fmtPhone(phone($('g1').value)));
+    fd.append('attachment',new File([pdf],ref+'.pdf',{type:'application/pdf'}));
+    const r=await fetch('https://formsubmit.co/ajax/'+OWNER_EMAIL,{method:'POST',body:fd,headers:{'Accept':'application/json'}});
+    return r.ok;
+  }catch(e){console.error(e);return false}
 }
 $('dl').onclick=async()=>{const b=$('dl');b.disabled=true;b.textContent='جاري إنشاء الملف…';
  try{const cv=await paintSheet(getData(lastDate)),pdf=await canvasToPdf(cv),url=URL.createObjectURL(pdf);
