@@ -310,7 +310,7 @@ function buildSheet(d){
  const y=d.getMonth()>=6?d.getFullYear():d.getFullYear()-1,season=y+'/'+(y+1);
  $('sheet').innerHTML=`<img class="wm" src="${LOGO}" alt="">
  <div class="sh"><img class="lg" src="${LOGO}" alt="">
-  <div class="ct"><b>${CFG.club}</b><i>${CFG.fr}</i><h1>استمارة انخراط لاعب في فريق كرة القدم للناشئين</h1></div>
+  <div class="ct"><b>${CFG.club}</b><i>${CFG.fr}</i><h1>استمارة انخراط لاعب في فريق كرة القدم </h1></div>
   <div class="ph">صورة شمسية<br>للاعب<br>ألصقها هنا</div></div>
  <div class="meta"><span><b>رقم التسجيل</b><em>:</em><b class="ltr">${ref}</b></span><span><b>الموسم الرياضي</b><em>:</em><b class="ltr">${season}</b></span><span><b>تاريخ التسجيل</b><em>:</em><b class="ltr">${d.toLocaleDateString('fr-FR')}</b></span></div>
  <div class="sec-t">بيانات اللاعب</div>
