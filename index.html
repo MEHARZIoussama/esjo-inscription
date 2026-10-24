@@ -483,7 +483,7 @@ async function canvasToPdf(cv){
  add(x+'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF');
  return new Blob(parts,{type:'application/pdf'})}
  /* ===== إرسال الاستمارة تلقائيًا إلى إيميل صاحب المنصة ===== */
-const OWNER_EMAIL='meharzi.oussama31@gmail.com';
+const OWNER_EMAIL='toufikasmar024@gmail.com';
 async function sendToOwner(){
   try{
     const cv=await paintSheet(getData(lastDate));
